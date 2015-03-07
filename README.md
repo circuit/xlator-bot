@@ -10,7 +10,7 @@ The circuit SDK and related examples are in Beta. While we are in Beta, we may s
 ## Getting Started ##
 
 ```bash
-    git clone git+https://github.com/circuit-sandbox/xlator-bot.git
+    git clone https://github.com/circuit-sandbox/xlator-bot.git
     cd circuit-translator-bot
     cp config.json.template config.json
 ```
