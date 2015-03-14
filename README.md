@@ -6,7 +6,7 @@ The circuit SDK and related examples are in Beta. While we are in Beta, we may s
 
 ## Requirements ##
 * [node 0.12.x or higher](http://nodejs.org/download/)
-* [circuit module](https://circuitsandbox.net/circuit-0.0.1.tgz)
+* circuit module
 
 ## Getting Started ##
 
@@ -14,6 +14,7 @@ The circuit SDK and related examples are in Beta. While we are in Beta, we may s
     git clone https://github.com/circuit-sandbox/xlator-bot.git
     cd circuit-translator-bot
     cp config.json.template config.json
+    wget https://circuitsandbox.net/circuit.tgz
 ```
 
 Edit config.json
@@ -31,7 +32,7 @@ Edit config.json
 Run the sample application with 
 ```bash
     npm install
-    npm install circuit-0.0.1.tgz
+    npm install circuit.tgz
     node index.js
 ``` 
 
