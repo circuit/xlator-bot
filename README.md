@@ -6,6 +6,7 @@ The circuit SDK and related examples are in Beta. While we are in Beta, we may s
 
 ## Requirements ##
 * [node 0.12.x or higher](http://nodejs.org/download/)
+* [circuit module](https://circuitsandbox.net/circuit-0.0.1.tgz)
 
 ## Getting Started ##
 
