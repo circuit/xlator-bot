@@ -12,9 +12,8 @@ The circuit SDK and related examples are in Beta. While we are in Beta, we may s
 
 ```bash
     git clone https://github.com/circuit-sandbox/xlator-bot.git
-    cd circuit-translator-bot
+    cd xlator-bot
     cp config.json.template config.json
-    wget https://circuitsandbox.net/circuit.tgz
 ```
 
 Edit config.json
@@ -32,6 +31,7 @@ Edit config.json
 Run the sample application with 
 ```bash
     npm install
+    wget https://circuitsandbox.net/circuit.tgz
     npm install circuit.tgz
     node index.js
 ``` 
