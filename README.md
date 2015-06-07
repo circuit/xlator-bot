@@ -1,5 +1,5 @@
 # xlator-bot
-This sample application shows how to receive Circuit Conversation updates and how to send Circuit conversation items with the [circuit SDK](https://circuitsandbox.net/sdk/index.html)
+This sample application shows how to receive Circuit Conversation updates and how to send Circuit conversation items with the [circuit node SDK](https://circuitsandbox.net/sdk/index.html)
 
 ## Beta ##
 The circuit SDK and related examples are in Beta. While we are in Beta, we may still make incompatible changes. 
