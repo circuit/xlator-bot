@@ -2,8 +2,6 @@
     "user"               : "bot user email",
     "password"           : "bot user password",
     "domain"             : "circuitsandbox.net",
-    "inspectInterval"    : "3600000",
-    "minLogonInterval"   : "120000",
     "apiKey"             : "google translation API key",
     "apiLogLevel"        : "error"
 }

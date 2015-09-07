@@ -22,204 +22,199 @@
     OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-/*jshint node:true*/
+/*jshint node:true */
+/*global require, Promise */
+
+'use strict';
+
+// load configuration
 var config = require('./config.json');
-var Circuit = require('circuit');
 
-var VError = require('verror');
-var htmlToText = require('html-to-text');
-var StringMap = require('stringmap');
-var googleTranslate = require('google-translate')(config.apiKey);
-
+// logger
 var bunyan = require('bunyan');
-var logger = bunyan.createLogger({
-    name: 'xlator_bot',
-    stream: process.stderr,
-    level: config.apiLogLevel
+
+// SDK logger
+var sdkLogger = bunyan.createLogger({
+    name: 'sdk',
+    stream: process.stdout,
+    level: 'config.sdkLogLevel'
 });
 
-Circuit.setLogger(logger);
+// Application logger
+var logger = bunyan.createLogger({
+    name: 'app',
+    stream: process.stdout,
+    level: 'debug'
+});
 
-var XlatorBot = (function (my) {
-    'use strict';
+// node utils
+var util = require('util');
+//var assert = require('assert');
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////
-    // dtermine languages (posted text can be prefixed with a language e.g. Italian text to translate ....)
-    ///////////////////////////////////////////////////////////////////////////////////////////////
-    var _langDictionary = require('./lang.json');
-    var _langMap = new StringMap(_langDictionary);
+var htmlToText = require('html-to-text');
+var googleTranslate = require('google-translate')(config.apiKey);
 
-    function getLanguage(text) {
-        var pattern = /^\s*([A-Za-zα-ωΑ-Ωϊίάύήόέöäüßèééïç]{2,})\s*(:|-|>|\.|,|;)*/;
-        var plainText = htmlToText.fromString(text, { wordwrap: 130 });
-        var matches = plainText.match(pattern);
-        var result = {lang: 'en', text: plainText};
+// Circuit SDK    
+logger.info('[APP]: get Circuit instance');
+var Circuit = require('circuit');
 
-        if (matches) {
-            var word = matches[1].toLowerCase();
-            if (_langMap.has(word)) {
-                result = {lang: _langMap.get(word), text: plainText.replace(matches[0], '')};
+logger.info('[APP]: Circuit set bunyan logger');
+Circuit.setLogger(sdkLogger);
+
+//*********************************************************************
+//* XlatorBot
+//*********************************************************************
+var XlatorBot = function(){
+
+    var self = this;
+    var client = null;
+    var langMap = new Map(require('./lang.json'));
+
+    //*********************************************************************
+    //* logon
+    //*********************************************************************
+    this.logon = function logon(){
+        logger.info('[APP]: logon');
+        return new Promise( function (resolve, reject) {
+            logger.info('[APP]: createClient');
+            client = new Circuit.Client({domain: config.domain});
+            self.addEventListeners(client);  //register evt listeners
+            client.logon(config.user, config.password)
+            .then(function loggedOn(user) {
+                logger.info('[APP]: loggedOn', user);
+                resolve();
+            })
+            .catch(reject);
+        });
+    };
+
+    //*********************************************************************
+    //* addEventListeners
+    //*********************************************************************
+    this.addEventListeners = function addEventListeners(client){
+        logger.info('[APP]: addEventListeners');
+        //set event callbacks for this client
+        client.addEventListener('connectionStateChanged', function (evt) {
+            self.logEvent(evt);
+        });
+        client.addEventListener('registrationStateChanged', function (evt) {
+            self.logEvent(evt);
+        });
+        client.addEventListener('reconnectFailed', function (evt) {
+            self.logEvent(evt);
+        });
+        client.addEventListener('itemAdded', function (evt) {
+            self.logEvent(evt);
+            self.xlateItem(evt.item);            
+        });
+        client.addEventListener('itemUpdated', function (evt) {
+            self.logEvent(evt);
+            self.xlateItem(evt.item);
+
+        });
+    };
+
+    //*********************************************************************
+    //* logEvent -- helper
+    //*********************************************************************
+    this.logEvent = function logEvent(evt){
+        logger.info('[APP]:', evt.type, 'event received');
+        logger.debug('[APP]:', util.inspect(evt, { showHidden: true, depth: null }));
+    };
+
+    //*********************************************************************
+    //* sentByMe -- helper
+    //*********************************************************************
+    this.sentByMe = function sentByMe (item){
+        return (client.loggedOnUser.userId === item.creatorId);
+    };  
+
+    //*********************************************************************
+    //* getLanguage -- helper
+    //*********************************************************************
+    this.getLanguage = function getLanguage (text){
+        logger.info('[APP]: getLanguage');
+        var lang = 'en';
+        // check if the first word in text 
+        // matches one of the languages 
+        // in the language map loaded from lang.json
+        var pattern = /^\s*([\u00BF-\u1FFF\u2C00-\uD7FF\w]{2,})\s*(:|-|>|\.|,|;)*/;
+        var matches = text.match(pattern);
+        if (matches){
+            var match = matches[1].toLowerCase();
+            if (langMap.get(match)) {
+                lang = langMap.get(match);
+                text = text.replace(matches[0], '');
             }
         }
-        console.info('regexp : ' + JSON.stringify(matches));
-        console.info('result : ' + JSON.stringify(result));
-        return result;
-    }
+        return {lang: lang, text: text};
+    };
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////
-    // xlate posts
-    ///////////////////////////////////////////////////////////////////////////////////////////////
-    var _xlationCounter = 0;
-
-    function xlatePost(item) {
-        if (item.type !== 'TEXT' || item.sentByMe) {
-            console.info('skip   : its either not text or I sent it');
-            return;
-        }
-
-        console.info('conv   : ' + item.convId);
-        console.info('item   : ' + item.itemId);
-        var threadId = (item.parent && item.parent.itemId) ? item.parent.itemId : item.itemId;
-        console.info('thread : ' + threadId);
-        console.info('type   : ' + item.type);
-        console.info('creator: ' + item.creator.emailAddress);
-
-        if (!item.text || item.text === undefined || item.text === '') {
-            console.info('skip   :  it does not have text');
-            return;
-        }
-
-        _user.getConversation(item.convId, function (err, conv) {
-            if (err) {
-                var verr = new VError('xlatePost: COULD NOT GET CONVERSATION "%s"', err);
-                console.error(verr.message);
-                return;
-            }
-            var res = getLanguage(item.text);
-            googleTranslate.translate(res.text, res.lang, function (err, translation) {
-                if (err) {
-                    var verr = new VError('xlatePost: UNABLE TO XLATE "%s"', err);
-                    console.error(verr.message);
-                    return;
+    //*********************************************************************
+    //* xlateText -- helper
+    //*********************************************************************
+    this.xlateText = function xlateText(text){
+        logger.info('[APP]: xlateText', text);
+        return new Promise( function (resolve, reject) {
+            var res = self.getLanguage(text);
+            googleTranslate.translate(res.text, res.lang, function (err, result) {
+                if (err){
+                    reject(err);
                 }
-                console.info('xlation: ' + translation.translatedText);
-                _xlationCounter++;
-                conv.sendComment(threadId, translation.translatedText, function (err, xlatedItem) {
-                    if (err) {
-                        var verr = new VError('xlatePost: UNABLE TO POST "%s"', err);
-                        console.error(verr.message);
-                        return;
-                    }
-                    console.info('posted : ' + xlatedItem.itemId);
-                });
+                logger.info('[APP]: xlated text', result);
+                resolve(result.translatedText);
             });
         });
-    }
-
-    ///////////////////////////////////////////////////////////////////////////////////////////////
-    // inspect the app
-    ///////////////////////////////////////////////////////////////////////////////////////////////
-    my.inspect = function inspect() {
-        console.log('inspect-------------------------------------');
-        var report = {};
-        report.time = new Date().toISOString();
-        report.lastLogin = _lastLogin;
-        report.lastStateChange = _lastStateChange;
-        report.inspectInterval = config.inspectInterval;
-        report.minLogonInterval = config.minLogonInterval;
-        report.uptime = process.uptime();
-        report.state = _state;
-        report.xlationCounter = _xlationCounter;
-        report.pid = process.pid;
-        report.memory = process.memoryUsage();
-        console.log(JSON.stringify(report, null, 2));
-        return report;
     };
+  
+    //*********************************************************************
+    //* xlateItem
+    //*********************************************************************
+    this.xlateItem = function xlateItem(item) {
+        logger.info('[APP]: xlateItem');
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////
-    // registerEventListeners
-    ///////////////////////////////////////////////////////////////////////////////////////////////
-    function registerEventListeners() {
-        console.info('registerEventListeners');
+        if (item.type !== 'TEXT' || self.sentByMe(item)) {
+            logger.debug('[APP]: skip it is not text or I sent it');
+            return;
+        }
 
-        _user.addEventListener('itemAdded', function (evt) {
-            console.info('user.onitemAdded-----------------------------');
-            xlatePost(evt.item);   
-        });
+        if (!item.text || !item.text.content) {
+            logger.info('[APP]: skip it does not have text');
+            return;
+        }
 
-        _user.addEventListener('itemUpdated', function (evt) {
-            console.info('user.onItemUpdated---------------------------');
-            xlatePost(evt.item);
-        });
-
-        _user.addEventListener('renewTokenError', function () {
-            console.info('user.onRenewTokenError----------------------');
-            my.reconnect();
-        });
-    }
-
-    ///////////////////////////////////////////////////////////////////////////////////////////////
-    // connect
-    ///////////////////////////////////////////////////////////////////////////////////////////////
-    var _lastLogin = null;
-    var _user = null;
-
-    my.connect = function connect() {
-        console.info('connect-------------------------------------');
-        _lastLogin = new Date();
-        Circuit.logon(config.user, config.password, config.domain).then(function(user) {
-            _user=user;
-            console.info('logonResponse-------------------------------');
-            console.info('starting as ' + _user.emailAddress);
-            registerEventListeners();
-        }, function(err) {
-            var verr = new VError('onLogonResponse: UNABLE TO LOGON "%s" "%s"', err, _state);
-            console.error(verr.message);
-            console.error('will retry to connect in ' + config.minLogonInterval + ' [ms]');
-            global.setTimeout(my.connect, config.minLogonInterval);
+        self.xlateText(htmlToText.fromString(item.text.content))
+        .then (function addXlatedItem(xlatedText){
+            logger.info('[APP]: addXlatedItem');
+            var comment = { 
+                convId: item.convId, 
+                parentId: (item.parentItemId) ? item.parentItemId : item.itemId, 
+                content: xlatedText
+            };
+            return client.addTextItem(item.convId, comment);
+        })
+        .catch(function(e){
+            logger.error('[APP]:', e);
         });
     };
+};
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////
-    // reconnect
-    ///////////////////////////////////////////////////////////////////////////////////////////////
-    my.reconnect = function reconnect() {
-        console.info('reconnect-----------------------------------');
-        //logout raises onRegistrationStateChange with state Disconnected
-        _user.logout();
-    };
+//*********************************************************************
+//* run
+//*********************************************************************
+function run() {
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////
-    // init
-    ///////////////////////////////////////////////////////////////////////////////////////////////
-    var _state = 'N/A';
-    var _lastStateChange = new Date();
-
-    my.init = function init() {
-        console.info('init----------------------------------------');
-        Circuit.addEventListener('registrationStateChange', function (evt) {
-            console.info('Circuit.onRegistrationStateChange------------');
-            var now = new Date();
-            console.info('old state  : ' + _state + '  ' + _lastStateChange.toISOString());
-            console.info('new state  : ' + evt.state + ' ' + now.toISOString());
-            _state = evt.state;
-            _lastStateChange = new Date();
-            if ( _state === 'Disconnected') {
-                var delay = (Number(now) - Number(_lastLogin) < config.minLogonInterval) ? 
-                    config.minLogonInterval : 0;
-                global.setTimeout(my.connect, delay);
-            }
+    var xlatorBot = new XlatorBot();
+      
+     xlatorBot.logon()
+        .catch (function(e){
+            logger.error('[APP]:', e);
         });
-    };    
+}
 
-    return my;
+//*********************************************************************
+//* main
+//*********************************************************************
+run();
 
-})({});
 
-///////////////////////////////////////////////////////////////////////////////////////////////
-// main
-///////////////////////////////////////////////////////////////////////////////////////////////
-XlatorBot.init();
-XlatorBot.connect();
-
-global.setInterval(XlatorBot.inspect, config.inspectInterval);
