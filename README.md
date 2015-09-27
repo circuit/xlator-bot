@@ -36,4 +36,9 @@ Run the sample application with
     node index.js
 ``` 
 
+If you do not have wget installed, you can also use curl to download circuit.tgz
+```bash
+curl "https://circuitsandbox.net/circuit.tgz" -o "circuit.tgz"
+``` 
+
 Add the Xlator Bot user to one of your circuit conversations. The Xlator Bot will translate posts and reply with a comment. By default translation is done to English. The Xlator Bot will attempt to translate to another language if the first word of a post matches one of the languages in lang.json.
