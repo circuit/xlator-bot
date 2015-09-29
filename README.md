@@ -5,7 +5,7 @@ This sample application shows how to receive Circuit Conversation updates and ho
 The circuit SDK and related examples are in Beta. While we are in Beta, we may still make incompatible changes. 
 
 ## Requirements ##
-* [node 0.12.x or higher](http://nodejs.org/download/)
+* [node 4.x or higher](http://nodejs.org/download/)
 * [circuit module](https://circuitsandbox.net/sdk/)
 
 ## Getting Started ##
