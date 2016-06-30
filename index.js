@@ -37,7 +37,7 @@ var bunyan = require('bunyan');
 var sdkLogger = bunyan.createLogger({
     name: 'sdk',
     stream: process.stdout,
-    level: 'config.sdkLogLevel'
+    level: config.sdkLogLevel
 });
 
 // Application logger
