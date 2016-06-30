@@ -3,5 +3,5 @@
     "password"           : "bot user password",
     "domain"             : "circuitsandbox.net",
     "apiKey"             : "google translation API key",
-    "apiLogLevel"        : "error"
+    "sdkLogLevel"        : "error"
 }
