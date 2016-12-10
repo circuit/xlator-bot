@@ -30,6 +30,8 @@
 // load configuration
 var config = require('./config.json');
 
+console.log(config);
+
 // logger
 var bunyan = require('bunyan');
 
@@ -49,7 +51,6 @@ var logger = bunyan.createLogger({
 
 // node utils
 var util = require('util');
-//var assert = require('assert');
 
 var htmlToText = require('html-to-text');
 var googleTranslate = require('google-translate')(config.apiKey);
@@ -77,11 +78,18 @@ var XlatorBot = function(){
         logger.info('[APP]: logon');
         return new Promise( function (resolve, reject) {
             logger.info('[APP]: createClient');
-            client = new Circuit.Client({domain: config.domain});
+            client = new Circuit.Client({
+                client_id: config.client_id,
+                client_secret: config.client_secret,
+                domain: config.domain});
             self.addEventListeners(client);  //register evt listeners
-            client.logon(config.user, config.password)
+            client.logon()
             .then(function loggedOn(user) {
                 logger.info('[APP]: loggedOn', user);
+                return client.setPresence({state: Circuit.Enums.PresenceState.AVAILABLE});
+            })
+            .then(() => {
+                console.log('Presence updated');                
                 resolve();
             })
             .catch(reject);

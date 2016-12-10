@@ -4,19 +4,14 @@
   "description": "xlate your circuit conversations",
   "main": "index.js",
   "dependencies": {
+    "bunyan": "^1.8.5",
     "google-translate": "^0.1.8",
-    "html-to-text": "^1.2.1",
-    "stringmap": "^0.2.2",
-    "bunyan": "^1.3.4",
-    "verror": "^1.6.0"
+    "html-to-text": "^1.6.2"
   },
   "devDependencies": {},
-  "scripts": {
-    "start": "./start.sh"
-  },
   "author": "Unify Inc.",
   "license": "MIT",
   "engines": {
-    "node": "0.12.x"
+    "node": "6.9.x"
   }
 }

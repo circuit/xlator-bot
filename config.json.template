@@ -1,7 +1,7 @@
 {
-    "user"               : "bot user email",
-    "password"           : "bot user password",
+    "client_id"          : "your circuit client id",
+    "client_secret"      : "your circuit secret",
     "domain"             : "circuitsandbox.net",
     "apiKey"             : "google translation API key",
-    "sdkLogLevel"        : "error"
+    "sdkLogLevel"        : "info"
 }
