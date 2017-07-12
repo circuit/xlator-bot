@@ -1,26 +1,18 @@
-/*
-    Xlator Bot
-    
-    Copyright (c) 2015 Unify Inc.
-
-    Permission is hereby granted, free of charge, to any person obtaining
-    a copy of this software and associated documentation files (the "Software"),
-    to deal in the Software without restriction, including without limitation
-    the rights to use, copy, modify, merge, publish, distribute, sublicense,
-    and/or sell copies of the Software, and to permit persons to whom the Software
-    is furnished to do so, subject to the following conditions:
-
-    The above copyright notice and this permission notice shall be included in
-    all copies or substantial portions of the Software.
-
-    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-    EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
-    OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
-    IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
-    CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
-    TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE
-    OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-*/
+/**
+ *  Copyright 2017 Unify Software and Solutions GmbH & Co.KG.
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ */
 
 /*jshint node:true */
 /*global require, Promise */
@@ -55,9 +47,9 @@ var util = require('util');
 var htmlToText = require('html-to-text');
 var googleTranslate = require('google-translate')(config.apiKey);
 
-// Circuit SDK    
+// Circuit SDK
 logger.info('[APP]: get Circuit instance');
-var Circuit = require('circuit');
+var Circuit = require('circuit-node-sdk');
 
 logger.info('[APP]: Circuit set bunyan logger');
 Circuit.setLogger(sdkLogger);
@@ -89,7 +81,7 @@ var XlatorBot = function(){
                 return client.setPresence({state: Circuit.Enums.PresenceState.AVAILABLE});
             })
             .then(() => {
-                console.log('Presence updated');                
+                console.log('Presence updated');
                 resolve();
             })
             .catch(reject);
@@ -113,7 +105,7 @@ var XlatorBot = function(){
         });
         client.addEventListener('itemAdded', function (evt) {
             self.logEvent(evt);
-            self.xlateItem(evt.item);            
+            self.xlateItem(evt.item);
         });
         client.addEventListener('itemUpdated', function (evt) {
             self.logEvent(evt);
@@ -135,7 +127,7 @@ var XlatorBot = function(){
     //*********************************************************************
     this.sentByMe = function sentByMe (item){
         return (client.loggedOnUser.userId === item.creatorId);
-    };  
+    };
 
     //*********************************************************************
     //* getLanguage -- helper
@@ -143,8 +135,8 @@ var XlatorBot = function(){
     this.getLanguage = function getLanguage (text){
         logger.info('[APP]: getLanguage');
         var lang = 'en';
-        // check if the first word in text 
-        // matches one of the languages 
+        // check if the first word in text
+        // matches one of the languages
         // in the language map loaded from lang.json
         var pattern = /^\s*([\u00BF-\u1FFF\u2C00-\uD7FF\w]{2,})\s*(:|-|>|\.|,|;)*/;
         var matches = text.match(pattern);
@@ -174,7 +166,7 @@ var XlatorBot = function(){
             });
         });
     };
-  
+
     //*********************************************************************
     //* xlateItem
     //*********************************************************************
@@ -194,9 +186,9 @@ var XlatorBot = function(){
         self.xlateText(htmlToText.fromString(item.text.content))
         .then (function addXlatedItem(xlatedText){
             logger.info('[APP]: addXlatedItem');
-            var comment = { 
-                convId: item.convId, 
-                parentId: (item.parentItemId) ? item.parentItemId : item.itemId, 
+            var comment = {
+                convId: item.convId,
+                parentId: (item.parentItemId) ? item.parentItemId : item.itemId,
                 content: xlatedText
             };
             return client.addTextItem(item.convId, comment);
@@ -213,7 +205,7 @@ var XlatorBot = function(){
 function run() {
 
     var xlatorBot = new XlatorBot();
-      
+
      xlatorBot.logon()
         .catch (function(e){
             logger.error('[APP]:', e);
