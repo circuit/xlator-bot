@@ -24,14 +24,12 @@ Edit config.json
     "domain"             : "circuitsandbox.net",
     "apiKey"             : "google translation API key",
 
-``` 
+```
 
-Run the sample application with 
+Run the sample application with
 ```bash
     npm install
-    curl "https://circuitsandbox.net/circuit.tgz" -o "circuit.tgz"
-    npm install circuit.tgz
     node index.js
-``` 
+```
 
 Add the Xlator Bot user to one of your circuit conversations. The Xlator Bot will translate posts and reply with a comment. By default translation is done to English. The Xlator Bot will attempt to translate to another language if the first word of a post matches one of the languages in lang.json.
