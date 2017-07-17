@@ -73,7 +73,9 @@ var XlatorBot = function(){
             client = new Circuit.Client({
                 client_id: config.client_id,
                 client_secret: config.client_secret,
-                domain: config.domain});
+                domain: config.domain,
+                autoRenewToken: true
+            });
             self.addEventListeners(client);  //register evt listeners
             client.logon()
             .then(function loggedOn(user) {
