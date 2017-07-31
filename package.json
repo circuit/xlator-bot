@@ -14,7 +14,7 @@
   },
   "devDependencies": {},
   "author": "Unify Inc.",
-  "license": "MIApache 2.0T",
+  "license": "Apache 2.0",
   "engines": {
     "node": "6.9.x"
   }
