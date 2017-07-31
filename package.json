@@ -1,13 +1,13 @@
 {
   "name": "xlator_bot",
-  "version": "0.0.2",
-  "description": "xlate your circuit conversations",
+  "version": "0.0.3",
+  "description": "Translate your circuit conversations",
   "main": "index.js",
   "scripts": {
     "start": "node index.js | bunyan"
   },
   "dependencies": {
-    "circuit-node-sdk": "^1.2.1200",
+    "circuit-sdk": "^1.2.1200",
     "bunyan": "^1.8.5",
     "google-translate": "^0.1.8",
     "html-to-text": "^1.6.2"

@@ -49,7 +49,7 @@ var googleTranslate = require('google-translate')(config.apiKey);
 
 // Circuit SDK
 logger.info('[APP]: get Circuit instance');
-var Circuit = require('circuit-node-sdk');
+var Circuit = require('circuit-sdk');
 
 logger.info('[APP]: Circuit set bunyan logger');
 Circuit.setLogger(sdkLogger);
