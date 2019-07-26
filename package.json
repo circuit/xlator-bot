@@ -7,7 +7,7 @@
     "start": "node index.js | bunyan"
   },
   "dependencies": {
-    "circuit-sdk": "^1.2.1200",
+    "circuit-sdk": "latest",
     "bunyan": "^1.8.5",
     "google-translate": "^0.1.8",
     "html-to-text": "^1.6.2"
